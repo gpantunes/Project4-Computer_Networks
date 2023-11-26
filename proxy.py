@@ -6,16 +6,47 @@ from threading import Thread
 #use a queue used by the producer and consuser thread 
 from queue import Queue
 # other aux.
-from manifest import trackContents, parseContents, requestGetWithRange
+#from manifest import trackContents, parseContents, requestGetWithRange
 
 PLAYER_PORT=8000        # Port where player is wtleg to play
 DASH_SERVER_PORT=9999       #Server with the sedia contents
 PROXY_PORT=1234        #Port of the proxy
 
 
+def getManifest(filePath):
+    # Define the URL of your local Docker server
+    baseUrl = "http://localhost:9999/"  # Replace port_number with your actual port
+
+    # Combine the base URL with the file path or endpoint
+    url = f"{baseUrl}/{filePath}"  # Replace file_path with the actual file path or endpoint
+
+    try:
+        # Make a GET request to download the file
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            print("File download successful!")
+            
+            # Save the file locally
+            with open("downloaded_file.txt", "wb") as file:
+                file.write(response.content)
+            
+            print("File saved as 'downloaded_file.txt'")
+        else:
+            print(f"Request failed with status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    # Specify the file path or endpoint you want to request
+    file_path = "movies/coco/manifest.txt"  # Replace with the actual file path or endpoint
+    getManifest(file_path)
+
+
 def producer(arg) :
     
-    #arg(e] urlBase, arg[1] novicNane, arg[21 track, arg(3] queue, arg(4] socket already connected
+    #arg(e] urlBase, arg[1] movieName, arg[21 track, arg(3] queue, arg(4] socket already connected
     urlBase = arg[0]
     movieName = arg[1]
     track = arg[2]
@@ -37,6 +68,8 @@ def producer(arg) :
         print("Producer: Ok all segments queued")
 
 
+
+
 def consumer(arg): #arg[0] queue, arg[1] socket already connected
 
     segmentQueue = arg[0];
@@ -44,11 +77,7 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
 
 
 
-
-
-    #outra função maybe
-
-while True:
+#while True:
 
     #get a segment from the queue
     #seg = ...
@@ -56,7 +85,7 @@ while True:
     #   break
     #send seg to player
 
-    print('Consumer: all segments sent to the player')
+    #print('Consumer: all segments sent to the player')
 
 
 if __name__ == '__main__':
