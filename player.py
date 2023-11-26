@@ -11,7 +11,7 @@ try:
     # Run gstreamer over the connection
     #cmdLine should be the directory/path of the mplayer
     cmdLine = 'mplayer -fps 31 -demuxer h264es -'
-    #cmdline = '/home/loucao/Desktop/Uni/3 ano/1Semestre/RC/Praticas/TPC4/TPC4-RC/'
+    #cmdline = ''
     player = subprocess.Popen(cmdLine.split(), stdin=subprocess.PIPE)
     while True:
         data = connection.read(1024)
