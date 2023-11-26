@@ -16,6 +16,7 @@ PROXY_PORT=1234        #Port of the proxy
 trackHeader = []
 trackOffsets = []
 manifest_file_path = 'manifest.txt'
+trackRead = False
 
 
 
@@ -98,6 +99,7 @@ def producer(arg):
 
         try:
             chunkRange = 'bytes={}-{}'.format(int(trackOffsets[i][0]), int(trackOffsets[i][0])+int(trackOffsets[i][1])-1)
+            #print(chunkRange)
 
             response = requests.get(url, headers={'Range':chunkRange})
 
@@ -111,16 +113,18 @@ def producer(arg):
         except requests.exceptions.RequestException as e:
                 print(f"An error occurred: {e}")
 
-        print('chunk downloaded')
+        #print('chunk downloaded')
 
-
+    trackRead = True
     print("Producer: Ok all segments queued")
-    print(queue)
+    #print(queue)
 
 
 
 
 def consumer(arg): #arg[0] queue, arg[1] socket already connected
+
+    i=0
 
     segmentQueue = arg[0]
     socket = arg[1]
@@ -128,21 +132,21 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
 
     #consumer send segmentQueue to player.py through socket
     while True:
-        
+        i+=1
+        print(i)
+        print(segmentQueue)
         segment = segmentQueue.get()
-
+        print(segment)
+        
         socket.sendall(segment)
         print("Consumer: sent segment to player")
 
-        if not queue.empty():
+        if not trackRead:
             continue
         else:
             break
 
     print("Consumer: all segments sent to the player")
-
- 
-
 
 
 #while True:
@@ -154,6 +158,8 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
     #send seg to player
 
     #print('Consumer: all segments sent to the player')
+
+
 
 
 if __name__ == '__main__':
@@ -176,7 +182,6 @@ if __name__ == '__main__':
         getManifest(urlBase, movieName)
         readManifest(movieName, track);
 
-
         #Shared queue for proxy treads producer and consumer
         queue = Queue()
         #proxy go to start the producer
@@ -196,12 +201,12 @@ if __name__ == '__main__':
         #now things are running
         #proxy only needs to wait for the producer and consumer treads to finish
         producer.join()
-        #consumer.join()
+        consumer.join()
 
 
         #and now we can close the sockets and connections
         sd.close()
-        #sp.close()
+        sp.close()
 
     else: 
         #input arguments for proxy are incorrect

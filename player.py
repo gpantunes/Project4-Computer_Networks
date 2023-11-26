@@ -10,7 +10,8 @@ connection = server_socket.accept()[0].makefile('rb')
 try:
     # Run gstreamer over the connection
     #cmdLine should be the directory/path of the mplayer
-    cmdLine = 'mplayer -fps 31 -demuxer h264es -'
+    #cmdLine = 'mplayer -fps 31 -demuxer h264es -'
+    cmdLine = 'mplayer -fps 24 -cache 1024 -'
     player = subprocess.Popen(cmdLine.split(), stdin=subprocess.PIPE)
     while True:
         data = connection.read(1024)
