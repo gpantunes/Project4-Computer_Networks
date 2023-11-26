@@ -13,15 +13,20 @@ DASH_SERVER_PORT=9999       #Server with the sedia contents
 PROXY_PORT=1234        #Port of the proxy
 
 
-def getManifest(filePath):
-    # Define the URL of your local Docker server
-    baseUrl = "http://localhost:9999/"  # Replace port_number with your actual port
+trackHeader = []
+trackOffsets = []
+manifest_file_path = 'manifest.txt'
 
-    # Combine the base URL with the file path or endpoint
-    url = f"{baseUrl}/{filePath}"  # Replace file_path with the actual file path or endpoint
+
+
+
+def getManifest(urlBase, movieName):
+
+    url = f"{urlBase}{movieName}/{'manifest.txt'}"
 
     try:
         # Make a GET request to download the file
+        print(url)
         response = requests.get(url)
 
         # Check if the request was successful (status code 200)
@@ -29,42 +34,96 @@ def getManifest(filePath):
             print("File download successful!")
             
             # Save the file locally
-            with open("downloaded_file.txt", "wb") as file:
+            with open("manifest.txt", "wb") as file:
                 file.write(response.content)
             
-            print("File saved as 'downloaded_file.txt'")
+            print("File saved as 'manifest.txt'")
         else:
             print(f"Request failed with status code {response.status_code}")
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
 
-if __name__ == "__main__":
-    # Specify the file path or endpoint you want to request
-    file_path = "movies/coco/manifest.txt"  # Replace with the actual file path or endpoint
-    getManifest(file_path)
 
 
-def producer(arg) :
+def readManifest(movieName, track):
+
+    trackStartMarker = f"{movieName}-{track}.mp4"
+    offsetStartMarker = '0'
+    endMarker = f"{movieName}-{track+1}.mp4"
+    headerReading = False
+    offsetReading = False
+
+    with open(manifest_file_path, 'r') as file:
+        for line in file:
+
+        # Split the line into a list of values      
+            values = line.strip().split() 
+
+            if line.strip() == trackStartMarker:
+                headerReading = True
+                trackHeader.append(line.strip().split())
+                continue
+            elif line.strip().split()[0] == offsetStartMarker and headerReading == True:
+                headerReading = False
+                offsetReading = True
+            elif line.strip() == endMarker:
+                break
+
+            if headerReading:
+                trackHeader.append(line.strip().split())
+
+            if offsetReading:
+                trackOffsets.append(line.strip().split())
+            
+        print(trackHeader)   
+        print(trackOffsets)
+        
+                                                          
+
+def producer(arg):
     
     #arg(e] urlBase, arg[1] movieName, arg[21 track, arg(3] queue, arg(4] socket already connected
     urlBase = arg[0]
     movieName = arg[1]
     track = arg[2]
-    segmentQueue = arg (3)
-    sock = arg (4)
+    segmentQueue = arg[3]
+    sock = arg[4]
 
-    print(urlBase, movieName, track, segmentQueue)
-    manifestuRL = urlBase + '/' + movieName + ' /nanifest. txt'
-    sucess, manifestFileContents = trackContents (manifestURL)
-    trackFile, noSegnents, segnents = parseContents (manifestfileContents, track)
-    urlTrackFile = urlBase + '/' + movieName +'/' + trackFile
+    #print(urlBase, movieName, track, segmentQueue)
+    #manifestuRL = urlBase + '/' + movieName + ' /manifest. txt'
+    #sucess, manifestFileContents = trackContents (manifestURL)
+    #trackFile, noSegnents, segnents = parseContents (manifestfileContents, track)
+    #urlTrackFile = urlBase + '/' + movieName +'/' + trackFile
 
 
+ 
 
-    for i in range(noSegments):
+    for i in range(int(trackHeader[4][0])):
 #        segment = .... TODO
 #        put i, segment in the queue
 #        until last segment recieved
+
+        url = f"{urlBase}{movieName}/{}"
+
+         try:
+        # Make a GET request to download the file
+        print(url)
+        response = requests.get(url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            print("File download successful!")
+            
+            # Save the file locally
+            with open("manifest.txt", "wb") as file:
+                file.write(response.content)
+            
+            print("File saved as 'manifest.txt'")
+        else:
+            print(f"Request failed with status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+
         print("Producer: Ok all segments queued")
 
 
@@ -97,12 +156,17 @@ if __name__ == '__main__':
         movieName = sys.argv[2]
         track = int(sys.argv[3])
         #proxy socket to connect and send things to the player
-        sp = socket(AF_INET, SOCK_STREAM)
-        sp.connect(("localhost", PLAYER_PORT))
 
-        #proxy socket to connect an to recieve from the dash docker server
+        #sp = socket(AF_INET, SOCK_STREAM)
+        #sp.connect(("localhost", PLAYER_PORT))
+
+        #proxy socket to connect and to recieve from the dash docker server
         sd = socket(AF_INET, SOCK_STREAM)
         sd.connect(("localhost", DASH_SERVER_PORT))
+
+        getManifest(urlBase, movieName)
+        readManifest(movieName, track);
+
 
         #Shared queue for proxy treads producer and consumer
         queue = Queue()
@@ -115,20 +179,20 @@ if __name__ == '__main__':
 
 
         #proxy go to start the consumer
-        arg = (queue, sp)
-        consumer = Thread(target = consumer, args = (arg,))
-        consumer.start()
+        #arg = (queue, sp)
+        #consumer = Thread(target = consumer, args = (arg,))
+        #consumer.start()
 
 
         #now things are running
         #proxy only needs to wait for the producer and consumer treads to finish
-        producer.join()
-        consumer.join()
+        #producer.join()
+        #consumer.join()
 
 
         #and now we can close the sockets and connections
         sd.close()
-        sp.close()
+        #sp.close()
 
     else: 
         #input arguments for proxy are incorrect

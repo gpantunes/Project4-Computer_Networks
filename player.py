@@ -10,7 +10,7 @@ connection = server_socket.accept()[0].makefile('rb')
 try:
     # Run gstreamer over the connection
     #cmdLine should be the directory/path of the mplayer
-    cmdline = ''
+    cmdLine = ''
     while True:
         data = connection.read(1024)
         if not data:
