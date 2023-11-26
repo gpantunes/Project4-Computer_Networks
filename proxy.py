@@ -128,11 +128,11 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
 
     #consumer send segmentQueue to player.py through socket
     while True:
-        with segmentQueue.lock:
-            segment = segmentQueue.get()
+        
+        segment = segmentQueue.get()
 
-            socket.sendall(segment)
-            print("Consumer: sent segment to player")
+        socket.sendall(segment)
+        print("Consumer: sent segment to player")
 
         if not queue.empty():
             continue
@@ -195,7 +195,7 @@ if __name__ == '__main__':
 
         #now things are running
         #proxy only needs to wait for the producer and consumer treads to finish
-        #producer.join()
+        producer.join()
         #consumer.join()
 
 
