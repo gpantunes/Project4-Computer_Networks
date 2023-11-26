@@ -23,10 +23,10 @@ def producer(arg) :
     sock = arg (4)
 
     print(urlBase, movieName, track, segmentQueue)
-    manifestuRL = urlBase+'/'+movieName+' /nanifest. txt'
+    manifestuRL = urlBase + '/' + movieName + ' /nanifest. txt'
     sucess, manifestFileContents = trackContents (manifestURL)
     trackFile, noSegnents, segnents = parseContents (manifestfileContents, track)
-    urlTrackFile = urlBase+'/'+movieName+'/'+trackFile
+    urlTrackFile = urlBase + '/' + movieName +'/' + trackFile
 
 
 
@@ -39,8 +39,8 @@ def producer(arg) :
 
 def consumer(arg): #arg[0] queue, arg[1] socket already connected
 
-    segmentQueue = arg[0];
-    print("Consumer: ", segmentQueue);
+    segmentQueue = arg[0]
+    print("Consumer: ", segmentQueue)
 
 
 
@@ -76,7 +76,7 @@ if __name__ == '__main__':
         sd.connect(("localhost", DASH_SERVER_PORT))
 
         #Shared queue for proxy treads producer and consumer
-        queue = Queue();
+        queue = Queue()
         #proxy go to start the producer
         #need to pass everything needed by the producer thread
         arg = (urlBase, movieName, track, queue, sd)
