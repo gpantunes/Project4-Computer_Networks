@@ -89,42 +89,33 @@ def producer(arg):
     segmentQueue = arg[3]
     sock = arg[4]
 
-    #print(urlBase, movieName, track, segmentQueue)
-    #manifestuRL = urlBase + '/' + movieName + ' /manifest. txt'
-    #sucess, manifestFileContents = trackContents (manifestURL)
-    #trackFile, noSegnents, segnents = parseContents (manifestfileContents, track)
-    #urlTrackFile = urlBase + '/' + movieName +'/' + trackFile
-
-
- 
-
     for i in range(int(trackHeader[4][0])):
 #        segment = .... TODO
 #        put i, segment in the queue
 #        until last segment recieved
 
-        url = f"{urlBase}{movieName}/{}"
+        url = f"{urlBase}{movieName}/{movieName}-{track}.mp4"
 
-         try:
-        # Make a GET request to download the file
-        print(url)
-        response = requests.get(url)
+        try:
+            chunkRange = 'bytes={}-{}'.format(int(trackOffsets[i][0]), int(trackOffsets[i][0])+int(trackOffsets[i][1])-1)
+
+            response = requests.get(url, headers={'Range':chunkRange})
+
+            if response.status_code == 206:
+                queue.put(response.content)
+            else:
+                raise Exception('Error retrieving chunk: {}'.format(response.status_code))
 
         # Check if the request was successful (status code 200)
-        if response.status_code == 200:
-            print("File download successful!")
             
-            # Save the file locally
-            with open("manifest.txt", "wb") as file:
-                file.write(response.content)
-            
-            print("File saved as 'manifest.txt'")
-        else:
-            print(f"Request failed with status code {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
+        except requests.exceptions.RequestException as e:
+                print(f"An error occurred: {e}")
 
-        print("Producer: Ok all segments queued")
+        print('chunk downloaded')
+
+
+    print("Producer: Ok all segments queued")
+    print(queue)
 
 
 
@@ -132,7 +123,25 @@ def producer(arg):
 def consumer(arg): #arg[0] queue, arg[1] socket already connected
 
     segmentQueue = arg[0]
+    socket = arg[1]
     print("Consumer: ", segmentQueue)
+
+    #consumer send segmentQueue to player.py through socket
+    while True:
+        with segmentQueue.lock:
+            segment = segmentQueue.get()
+
+            socket.sendall(segment)
+            print("Consumer: sent segment to player")
+
+        if not queue.empty():
+            continue
+        else:
+            break
+
+    print("Consumer: all segments sent to the player")
+
+ 
 
 
 
@@ -157,8 +166,8 @@ if __name__ == '__main__':
         track = int(sys.argv[3])
         #proxy socket to connect and send things to the player
 
-        #sp = socket(AF_INET, SOCK_STREAM)
-        #sp.connect(("localhost", PLAYER_PORT))
+        sp = socket(AF_INET, SOCK_STREAM)
+        sp.connect(("localhost", PLAYER_PORT))
 
         #proxy socket to connect and to recieve from the dash docker server
         sd = socket(AF_INET, SOCK_STREAM)
@@ -179,9 +188,9 @@ if __name__ == '__main__':
 
 
         #proxy go to start the consumer
-        #arg = (queue, sp)
-        #consumer = Thread(target = consumer, args = (arg,))
-        #consumer.start()
+        arg = (queue, sp)
+        consumer = Thread(target = consumer, args = (arg,))
+        consumer.start()
 
 
         #now things are running
