@@ -25,5 +25,3 @@ finally:
     server_socket.close()
     player.terminate()  
 
-    print('cona')
-

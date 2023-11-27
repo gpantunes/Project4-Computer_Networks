@@ -77,8 +77,7 @@ def readManifest(movieName, track):
                                                           
 
 def producer(arg):
-    global trackRead
-    
+ 
     #arg(e] urlBase, arg[1] movieName, arg[21 track, arg(3] queue, arg(4] socket already connected
     urlBase = arg[0]
     movieName = arg[1]
@@ -99,11 +98,8 @@ def producer(arg):
 
             response = requests.get(url, headers={'Range':chunkRange})
 
-            print(response.status_code)
-
             if response.status_code == 206:
                 segmentQueue.put(response.content)
-                print('xinada')
             else:
                 raise Exception('Error retrieving chunk: {}'.format(response.status_code))
 
@@ -114,8 +110,7 @@ def producer(arg):
 
         #print('chunk downloaded')
 
-
-    segmentQueue.put('')
+    segmentQueue.put(str.encode(''))
     print("Producer: Ok all segments queued")
 
 
@@ -132,13 +127,10 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
     
         segment = segmentQueue.get() 
         
-        if segment == '': 
+        if segment == b'': 
             break
         else:
-            socket.sendall(segment)
-
-        
-            
+            socket.sendall(segment)  
 
     print("Consumer: all segments sent to the player")
 
@@ -190,8 +182,6 @@ if __name__ == '__main__':
         #and now we can close the sockets and connections
         sd.close()
         sp.close()
-
-        print('cona')
 
     else: 
         #input arguments for proxy are incorrect
