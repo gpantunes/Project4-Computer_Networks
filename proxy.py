@@ -112,6 +112,7 @@ def producer(arg):
 
         #print('chunk downloaded')
 
+    queue.put(None)
     print("Producer: Ok all segments queued")
     trackRead = True
     #print(queue)
@@ -134,6 +135,8 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
         
         
         segment = segmentQueue.get() 
+        if segment == None:
+            break
         
         
         print('deu get')
