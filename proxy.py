@@ -16,7 +16,6 @@ PROXY_PORT=1234        #Port of the proxy
 trackHeader = []
 trackOffsets = []
 manifest_file_path = 'manifest.txt'
-trackRead = False
 
 
 
@@ -100,8 +99,11 @@ def producer(arg):
 
             response = requests.get(url, headers={'Range':chunkRange})
 
+            print(response.status_code)
+
             if response.status_code == 206:
-                queue.put(response.content)
+                segmentQueue.put(response.content)
+                print('xinada')
             else:
                 raise Exception('Error retrieving chunk: {}'.format(response.status_code))
 
@@ -112,17 +114,13 @@ def producer(arg):
 
         #print('chunk downloaded')
 
-    queue.put(None)
-    print("Producer: Ok all segments queued")
-    trackRead = True
-    #print(queue)
 
+    segmentQueue.put('')
+    print("Producer: Ok all segments queued")
 
 
 
 def consumer(arg): #arg[0] queue, arg[1] socket already connected
-    global trackRead
-    i = 0
 
     segmentQueue = arg[0]
     socket = arg[1]
@@ -130,33 +128,19 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
 
     #consumer send segmentQueue to player.py through socket
     while True:
-        i+=1
-        print(i)
-        
-        
+     
+    
         segment = segmentQueue.get() 
-        if segment == None:
+        
+        if segment == '': 
             break
+        else:
+            socket.sendall(segment)
+
         
-        
-        print('deu get')
-        print(segment == None)
-        
-        socket.sendall(segment)
             
 
     print("Consumer: all segments sent to the player")
-
-
-#while True:
-
-    #get a segment from the queue
-    #seg = ...
-    #if seg = None:
-    #   break
-    #send seg to player
-
-    #print('Consumer: all segments sent to the player')
 
 
 
