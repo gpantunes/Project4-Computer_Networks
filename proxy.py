@@ -20,7 +20,6 @@ trackRead = False
 
 
 
-
 def getManifest(urlBase, movieName):
 
     url = f"{urlBase}{movieName}/{'manifest.txt'}"
@@ -75,13 +74,11 @@ def readManifest(movieName, track):
 
             if offsetReading:
                 trackOffsets.append(line.strip().split())
-            
-        print(trackHeader)   
-        print(trackOffsets)
         
                                                           
 
 def producer(arg):
+    global trackRead
     
     #arg(e] urlBase, arg[1] movieName, arg[21 track, arg(3] queue, arg(4] socket already connected
     urlBase = arg[0]
@@ -115,16 +112,16 @@ def producer(arg):
 
         #print('chunk downloaded')
 
-    trackRead = True
     print("Producer: Ok all segments queued")
+    trackRead = True
     #print(queue)
 
 
 
 
 def consumer(arg): #arg[0] queue, arg[1] socket already connected
-
-    i=0
+    global trackRead
+    i = 0
 
     segmentQueue = arg[0]
     socket = arg[1]
@@ -134,17 +131,16 @@ def consumer(arg): #arg[0] queue, arg[1] socket already connected
     while True:
         i+=1
         print(i)
-        print(segmentQueue)
-        segment = segmentQueue.get()
-        print(segment)
+        
+        
+        segment = segmentQueue.get() 
+        
+        
+        print('deu get')
+        print(segment == None)
         
         socket.sendall(segment)
-        print("Consumer: sent segment to player")
-
-        if not trackRead:
-            continue
-        else:
-            break
+            
 
     print("Consumer: all segments sent to the player")
 
@@ -208,7 +204,9 @@ if __name__ == '__main__':
         sd.close()
         sp.close()
 
+        print('cona')
+
     else: 
         #input arguments for proxy are incorrect
         print('Command line provided not correct')
-        print('Use: myproxy.py urlBase movieName track')
+        print('Use: proxy.py urlBase movieName track')

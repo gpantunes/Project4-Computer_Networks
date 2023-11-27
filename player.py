@@ -15,11 +15,15 @@ try:
     player = subprocess.Popen(cmdLine.split(), stdin=subprocess.PIPE)
     while True:
         data = connection.read(1024)
+    
         if not data:
             break
         player.stdin.write(data)
-finally:      
+
+finally:    
     connection.close()
     server_socket.close()
     player.terminate()  
+
+    print('cona')
 
